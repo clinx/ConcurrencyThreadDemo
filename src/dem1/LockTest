@@ -1,0 +1,62 @@
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+public class LockTest {
+
+	private static final Lock lock = new ReentrantLock(); // 锁对象
+	private static final Condition notify = lock.newCondition(); // 写线程锁
+	
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		new Thread(){
+			public void run(){
+				lock.lock();
+				System.out.println("lock");
+				try{
+					notify.await();
+					System.out.println("wake");
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}finally{
+					lock.unlock();
+				}
+			}
+		}.start();
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		new Thread(){
+			public void run(){
+				while(true){
+						try {
+							Thread.sleep(1000);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						lock.lock();
+						try{
+							notify.signal();
+						}finally{
+							lock.unlock();
+						}
+					
+						System.out.println("notify again");
+					}
+				}
+		}.start();
+		
+		try {
+			Thread.sleep(1000000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+}
